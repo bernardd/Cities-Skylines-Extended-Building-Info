@@ -1,7 +1,4 @@
 ﻿using ColossalFramework.UI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
@@ -9,43 +6,48 @@ using UnityEngine;
 namespace ExtendedBuildings
 {
 
-    public class ServiceInfoWindow2 : MonoBehaviour
+    public class ServiceInfoWindow2 : UIPanel
     {
-        UILabel info;
-        UILabel label1;
+        UILabel label;
         FieldInfo baseSub;
-
-        CityServiceWorldInfoPanel m_servicePanel;
-        public CityServiceWorldInfoPanel servicePanel
-        {
-            get { return m_servicePanel; }
-            set
-            {
-                var stats = value.Find<UIPanel>("StatsPanel");
-                info = stats.Find<UILabel>("Info");
-                label1 = stats.AddUIComponent<UILabel>();
-                label1.color = info.color;
-                label1.textColor = info.textColor;
-                label1.textScale = info.textScale;
-                label1.relativePosition = new Vector3(0, info.height + info.relativePosition.y - 40);
-                label1.size = new Vector2(230, 84);
-                label1.font = info.font;
-
-                m_servicePanel = value;
-            }
-        }
+        public CityServiceWorldInfoPanel baseBuildingWindow;
 
         int lastSelected;
 
-        public void Update()
+        public override void Start()
         {
-            if (servicePanel == null)
-            {
-                return;
-            }
+            base.Start();
 
-            var buildingId = GetParentInstanceId().Building;
-            if (this.enabled && info.isVisible && BuildingManager.instance != null && ((SimulationManager.instance.m_currentFrameIndex & 15u) == 15u || lastSelected != buildingId))
+            backgroundSprite = "MenuPanel2";
+            opacity = 0.8f;
+            isVisible = true;
+            canFocus = true;
+            isInteractive = true;
+
+            UIPanel stats = baseBuildingWindow.Find<UIPanel>("LayoutPanel");
+            UILabel info = stats.Find<UILabel>("Info");
+
+            label.color = info.color;
+            label.textColor = info.textColor;
+            label.textScale = info.textScale;
+            label.position = new Vector3(50, 50);
+            label.size = new Vector2(baseBuildingWindow.component.width - 20, 84);
+            label.font = info.font;
+            height = 104;
+            width = baseBuildingWindow.component.width;
+        }
+
+        public override void Awake()
+        {
+            label = AddUIComponent<UILabel>();
+
+            base.Awake();
+        }
+
+        public override void Update()
+        {
+            ushort buildingId = GetParentInstanceId().Building;
+            if (this.enabled && isVisible && BuildingManager.instance != null && ((SimulationManager.instance.m_currentFrameIndex & 15u) == 15u || lastSelected != buildingId))
             {
                 Debug.Log("running");
                 lastSelected = buildingId;
@@ -132,10 +134,12 @@ namespace ExtendedBuildings
                     sb.AppendLine(Localization.Get(LocalizationCategory.ServiceInfo, "Radius") + ": " + radius.ToString());
                     ii += 2;
                 }
-                label1.relativePosition = new Vector3(0, info.height + info.relativePosition.y - 14 * ii);
-                label1.text = sb.ToString();
+                label.relativePosition = new Vector3(10, 10);
+                label.text = sb.ToString();
+                label.Show();
             }
-            
+
+            base.Update();
         }
 
         private string GetLlamaSightings(double scale)
@@ -147,9 +151,9 @@ namespace ExtendedBuildings
         {
             if (baseSub == null)
             {
-                baseSub = this.m_servicePanel.GetType().GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance);
+                baseSub = this.baseBuildingWindow.GetType().GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance);
             }
-            return (InstanceID)baseSub.GetValue(this.m_servicePanel);
+            return (InstanceID)baseSub.GetValue(this.baseBuildingWindow);
         }
     }
 }

@@ -1,16 +1,13 @@
 ﻿using ColossalFramework.UI;
 using ICities;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace ExtendedBuildings
 {
     public class ExtendedLoading : LoadingExtensionBase
     {
-        static GameObject buildingWindowGameObject;
+        static GameObject buildingWindowGameObject, serviceWindowGameObject;
         BuildingInfoWindow5 buildingWindow;
         ServiceInfoWindow2 serviceWindow;
         private LoadMode _mode;
@@ -22,25 +19,31 @@ namespace ExtendedBuildings
             _mode = mode;
 
             buildingWindowGameObject = new GameObject("buildingWindowObject");
-
-            var buildingInfo = UIView.Find<UIPanel>("(Library) ZonedBuildingWorldInfoPanel");
             this.buildingWindow = buildingWindowGameObject.AddComponent<BuildingInfoWindow5>();
-            this.buildingWindow.transform.parent = buildingInfo.transform;
-            this.buildingWindow.size = new Vector3(buildingInfo.size.x, buildingInfo.size.y);
-            this.buildingWindow.baseBuildingWindow = buildingInfo.gameObject.transform.GetComponentInChildren<ZonedBuildingWorldInfoPanel>();
-            this.buildingWindow.position = new Vector3(0, 12);
-            buildingInfo.eventVisibilityChanged += buildingInfo_eventVisibilityChanged;
+            UIPanel info = attachWindow(
+                this.buildingWindow,
+                new PropertyChangedEventHandler<bool>(buildingInfo_eventVisibilityChanged),
+                "(Library) ZonedBuildingWorldInfoPanel");
+            this.buildingWindow.baseBuildingWindow = info.gameObject.transform.GetComponentInChildren<ZonedBuildingWorldInfoPanel>();
 
-            var serviceBuildingInfo = UIView.Find<UIPanel>("(Library) CityServiceWorldInfoPanel");
-            serviceWindow = buildingWindowGameObject.AddComponent<ServiceInfoWindow2>(); 
-            serviceWindow.servicePanel = serviceBuildingInfo.gameObject.transform.GetComponentInChildren<CityServiceWorldInfoPanel>();
-            
-            serviceBuildingInfo.eventVisibilityChanged += serviceBuildingInfo_eventVisibilityChanged;
+            serviceWindowGameObject = new GameObject("serviceWindowObject");
+            this.serviceWindow = serviceWindowGameObject.AddComponent<ServiceInfoWindow2>();
+            info = attachWindow(
+                 this.serviceWindow,
+                 new PropertyChangedEventHandler<bool>(serviceBuildingInfo_eventVisibilityChanged),
+                 "(Library) CityServiceWorldInfoPanel");
+            this.serviceWindow.baseBuildingWindow = info.gameObject.transform.GetComponentInChildren<CityServiceWorldInfoPanel>();
         }
 
-        private void serviceBuildingInfo_eventVisibilityChanged(UIComponent component, bool value)
+        private UIPanel attachWindow(UIPanel p, PropertyChangedEventHandler<bool> vc, String parent)
         {
-            serviceWindow.Update();
+            var info = UIView.Find<UIPanel>(parent);
+            p.transform.parent = info.transform;
+            p.size = new Vector3(info.size.x, info.size.y);
+            p.position = new Vector3(0, 12);
+            info.eventVisibilityChanged += vc;
+
+            return info;
         }
 
         public override void OnLevelUnloading()
@@ -60,6 +63,11 @@ namespace ExtendedBuildings
             {
                 GameObject.Destroy(buildingWindowGameObject);
             }
+
+            if (serviceWindowGameObject != null)
+            {
+                GameObject.Destroy(serviceWindowGameObject);
+            }
         }
 
         void buildingInfo_eventVisibilityChanged(UIComponent component, bool value)
@@ -75,5 +83,17 @@ namespace ExtendedBuildings
             }
         }
 
+        private void serviceBuildingInfo_eventVisibilityChanged(UIComponent component, bool value)
+        {
+            this.serviceWindow.isEnabled = value;
+            if (value)
+            {
+                this.serviceWindow.Show();
+            }
+            else
+            {
+                this.serviceWindow.Hide();
+            }
+        }
     }
 }

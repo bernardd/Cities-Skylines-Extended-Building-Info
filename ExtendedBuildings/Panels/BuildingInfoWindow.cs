@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ExtendedBuildings
+﻿namespace ExtendedBuildings
 {
     using ColossalFramework;
-    using ColossalFramework.Globalization;
     using ColossalFramework.Math;
     using ColossalFramework.UI;
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Reflection;
-    using System.Timers;
     using UnityEngine;
 
     public class BuildingInfoWindow5 : UIPanel
@@ -31,7 +23,6 @@ namespace ExtendedBuildings
 
         UILabel educationLabel;
         UIProgressBar educationBar;
-
 
         UILabel happyLabel;
         UIProgressBar happyBar;
@@ -153,8 +144,6 @@ namespace ExtendedBuildings
 
         public void SetupControls()
         {
-            base.Start();
-
             barWidth = this.size.x - 28;
             float y = 70;
 
